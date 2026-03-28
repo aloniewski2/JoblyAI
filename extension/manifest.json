@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "JoblyAI — Save Job",
+  "version": "1.0.0",
+  "description": "One-click save any job posting to your JoblyAI tracker.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon.svg",
+      "48": "icons/icon.svg",
+      "128": "icons/icon.svg"
+    },
+    "default_title": "Save to JoblyAI"
+  },
+  "icons": {
+    "16": "icons/icon.svg",
+    "48": "icons/icon.svg",
+    "128": "icons/icon.svg"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "host_permissions": [
+    "http://localhost:3001/*",
+    "<all_urls>"
+  ],
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ]
+}

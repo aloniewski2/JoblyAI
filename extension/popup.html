@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JoblyAI</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 380px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      color: #0f172a;
+      background: #fff;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px 11px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo-icon {
+      width: 26px; height: 26px;
+      background: #7c3aed;
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-icon svg { width: 14px; height: 14px; fill: white; }
+    .logo-text {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.3px;
+    }
+    .header-actions { display: flex; gap: 6px; align-items: center; }
+    .btn-icon {
+      background: none; border: none; cursor: pointer;
+      color: #94a3b8; padding: 4px; border-radius: 5px;
+      display: flex; align-items: center;
+      transition: color 0.15s, background 0.15s;
+    }
+    .btn-icon:hover { color: #475569; background: #f8fafc; }
+    .btn-icon svg { width: 15px; height: 15px; }
+
+    /* ── States ── */
+    .state { display: none; }
+    .state.active { display: block; }
+
+    /* ── Loading ── */
+    .loading-body {
+      padding: 32px 20px;
+      text-align: center;
+    }
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid #e2e8f0;
+      border-top-color: #7c3aed;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-body p { color: #64748b; font-size: 13px; }
+
+    /* ── Source badge ── */
+    .source-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: #f0fdf4;
+      color: #16a34a;
+      margin-bottom: 12px;
+    }
+    .source-badge.warn { background: #fffbeb; color: #d97706; }
+    .source-badge svg { width: 10px; height: 10px; }
+
+    /* ── Form ── */
+    .form-body { padding: 12px 14px 14px; }
+    .field { margin-bottom: 9px; }
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 3px;
+    }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      padding: 6px 9px;
+      font-size: 13px;
+      border: 1px solid #e2e8f0;
+      border-radius: 7px;
+      color: #0f172a;
+      background: #fff;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      font-family: inherit;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 2px #ede9fe;
+    }
+    .field textarea { resize: none; height: 56px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    /* ── Paste fallback ── */
+    .paste-hint {
+      background: #fefce8;
+      border: 1px solid #fef08a;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 12px;
+      color: #713f12;
+      margin-bottom: 10px;
+      display: flex;
+      gap: 6px;
+      align-items: flex-start;
+    }
+    .paste-hint svg { width: 13px; height: 13px; flex-shrink: 0; margin-top: 1px; color: #ca8a04; }
+    .paste-body { padding: 12px 14px 14px; }
+    .paste-body .paste-hint { margin-bottom: 10px; }
+    .paste-area {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 7px;
+      color: #0f172a;
+      background: #fff;
+      outline: none;
+      resize: none;
+      height: 90px;
+      font-family: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .paste-area:focus { border-color: #7c3aed; box-shadow: 0 0 0 2px #ede9fe; }
+
+    /* ── Buttons ── */
+    .btn-row { display: flex; gap-6px; gap: 6px; margin-top: 10px; }
+    .btn {
+      flex: 1;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+    .btn svg { width: 14px; height: 14px; }
+    .btn-primary {
+      background: #7c3aed;
+      color: white;
+    }
+    .btn-primary:hover { background: #6d28d9; }
+    .btn-primary:active { background: #5b21b6; }
+    .btn-primary:disabled { background: #c4b5fd; cursor: default; }
+    .btn-secondary {
+      background: #f8fafc;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+    }
+    .btn-secondary:hover { background: #f1f5f9; }
+
+    /* ── Saved state ── */
+    .saved-body {
+      padding: 28px 20px 24px;
+      text-align: center;
+    }
+    .check-circle {
+      width: 48px; height: 48px;
+      background: #f0fdf4;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 12px;
+    }
+    .check-circle svg { width: 24px; height: 24px; color: #16a34a; }
+    .saved-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+    .saved-sub {
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 16px;
+    }
+    .open-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #7c3aed;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+    .open-link:hover { text-decoration: underline; }
+    .open-link svg { width: 12px; height: 12px; }
+
+    /* ── Error ── */
+    .error-body {
+      padding: 24px 20px;
+      text-align: center;
+    }
+    .error-icon {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+    .error-msg {
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 14px;
+    }
+
+    /* ── Settings panel ── */
+    .settings-body { padding: 12px 14px 14px; }
+    .settings-body .field label { margin-bottom: 4px; }
+    .settings-body p { font-size: 12px; color: #94a3b8; margin-top: 6px; }
+
+    /* ── Divider ── */
+    .divider {
+      border: none;
+      border-top: 1px solid #f1f5f9;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="6" width="12" height="9" rx="1"/>
+          <path d="M5 6V4.5A1.5 1.5 0 0 1 6.5 3h3A1.5 1.5 0 0 1 11 4.5V6" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="8" y1="9" x2="8" y2="12" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="6" y1="10.5" x2="10" y2="10.5" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="logo-text">JoblyAI</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn-icon" id="btn-settings" title="Settings">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="state" id="state-loading">
+    <div class="loading-body">
+      <div class="spinner"></div>
+      <p id="loading-msg">Reading job posting…</p>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <div class="state" id="state-form">
+    <div class="form-body">
+      <div id="source-badge-wrap"></div>
+
+      <div class="field">
+        <label>Company</label>
+        <input type="text" id="f-company" placeholder="Company name" />
+      </div>
+      <div class="field">
+        <label>Job Title</label>
+        <input type="text" id="f-title" placeholder="Job title" />
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Location</label>
+          <input type="text" id="f-location" placeholder="City or Remote" />
+        </div>
+        <div class="field">
+          <label>Salary</label>
+          <input type="text" id="f-salary" placeholder="e.g. $120k–$150k" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Status</label>
+          <select id="f-status">
+            <option value="Interested">Interested</option>
+            <option value="Applied" selected>Applied</option>
+            <option value="Recruiter Screen">Recruiter Screen</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Priority</label>
+          <select id="f-priority">
+            <option value="high">High</option>
+            <option value="medium" selected>Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="paste-fallback-section" style="display:none">
+        <hr class="divider" />
+        <div class="paste-hint">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/>
+          </svg>
+          <span>Couldn't auto-extract the full description. Paste it below for AI to process later, or just save now.</span>
+        </div>
+        <div class="field">
+          <label>Job Description (optional)</label>
+          <textarea id="f-jd" placeholder="Paste the job description here…"></textarea>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="btn-cancel">Cancel</button>
+        <button class="btn btn-primary" id="btn-save">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+          </svg>
+          Save to JoblyAI
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Paste fallback (when auth-wall site) -->
+  <div class="state" id="state-paste">
+    <div class="paste-body">
+      <div class="paste-hint">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/>
+        </svg>
+        <span>This site requires login to scrape. Paste the job description and JoblyAI will extract the details via AI.</span>
+      </div>
+      <textarea class="paste-area" id="paste-text" placeholder="Paste the full job description here…"></textarea>
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="btn-paste-cancel">Cancel</button>
+        <button class="btn btn-primary" id="btn-paste-extract">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09z"/>
+          </svg>
+          Extract &amp; Fill Form
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Saved -->
+  <div class="state" id="state-saved">
+    <div class="saved-body">
+      <div class="check-circle">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+      <div class="saved-title" id="saved-title">Saved!</div>
+      <div class="saved-sub" id="saved-sub">Added to your pipeline.</div>
+      <button class="open-link" id="btn-open-app">
+        Open in JoblyAI
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="state" id="state-error">
+    <div class="error-body">
+      <div class="error-icon">⚠️</div>
+      <div class="saved-title" style="margin-bottom:6px">Could not connect</div>
+      <div class="error-msg" id="error-msg">Make sure JoblyAI is running at localhost:3001</div>
+      <div class="btn-row" style="justify-content:center">
+        <button class="btn btn-secondary" id="btn-error-retry" style="flex:0;padding:7px 16px">Retry</button>
+        <button class="btn btn-primary" id="btn-error-paste" style="flex:0;padding:7px 16px">Paste Instead</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div class="state" id="state-settings">
+    <div class="settings-body">
+      <div class="field">
+        <label>JoblyAI Server URL</label>
+        <input type="text" id="s-server-url" placeholder="http://localhost:3001" />
+      </div>
+      <p>Change this if you've deployed JoblyAI to a custom domain or different port.</p>
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="btn-settings-cancel">Cancel</button>
+        <button class="btn btn-primary" id="btn-settings-save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
