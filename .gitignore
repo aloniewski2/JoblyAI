@@ -8,10 +8,10 @@ client/dist/
 client/build/
 
 # Database
-server/*.db
-server/*.sqlite
-*.db
-*.sqlite
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/*.sqlite
 
 # Uploads
 server/uploads/
