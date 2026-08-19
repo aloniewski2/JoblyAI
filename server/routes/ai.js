@@ -1,5 +1,34 @@
 const express = require('express');
 const router = express.Router();
+
+/* Every route in here spends the deployer's Groq key. The app has no auth, so
+   on a public URL anyone who finds it can spend that key — cap it per caller,
+   plus a global daily ceiling so spreading across addresses doesn't help. */
+const AI_RATE = { windowMs: 60_000, max: 10, dayMax: 300 };
+const aiHits = new Map();
+let aiDay = { count: 0, start: Date.now() };
+
+function aiRateLimit(req, res, next) {
+  const now = Date.now();
+  if (now - aiDay.start > 86_400_000) aiDay = { count: 0, start: now };
+  if (++aiDay.count > AI_RATE.dayMax) {
+    return res.status(429).json({ error: 'Daily AI limit reached for this deployment.' });
+  }
+  const ip = req.headers['x-real-ip'] ||
+    String(req.headers['x-forwarded-for'] || '').split(',').pop()?.trim() ||
+    req.socket?.remoteAddress || 'unknown';
+  const recent = (aiHits.get(ip) || []).filter((t) => now - t < AI_RATE.windowMs);
+  recent.push(now);
+  aiHits.set(ip, recent);
+  if (aiHits.size > 5000) aiHits.clear();
+  if (recent.length > AI_RATE.max) {
+    return res.status(429).json({ error: `Too many AI requests — ${AI_RATE.max} a minute, please.` });
+  }
+  next();
+}
+
+router.use(aiRateLimit);
+
 const db = require('../db');
 const { getAIClient, calcStreak } = require('../lib/ai');
 
