@@ -1,0 +1,25 @@
+# Render blueprint — https://render.com/docs/blueprint-spec
+#
+# Deploy: Render dashboard -> New -> Blueprint -> pick this repo.
+# Render reads this file; you fill in the two secrets when prompted.
+services:
+  - type: web
+    name: joblyai
+    runtime: node
+    plan: free
+    # The server serves the built client from client/dist, so this is one
+    # service on one port rather than a separate frontend deploy.
+    buildCommand: npm run setup && npm run build
+    startCommand: node server/index.js
+    healthCheckPath: /api/dashboard
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # sync:false means Render prompts for the value and stores it encrypted.
+      # It never enters the repository.
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
